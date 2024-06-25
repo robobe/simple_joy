@@ -1,0 +1,6 @@
+{
+    mode: "client",
+    connect: {
+        endpoints: ["udp/172.17.0.1:35407"]
+    }
+}
