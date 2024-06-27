@@ -6,15 +6,14 @@ import logging
 from typing import List
 import time
 from threading import Thread
-from linux_joystick import AxisEvent, ButtonEvent, Joystick
+from linux_joystick import AxisEvent, ButtonEvent, Joystick as JoySimple
 from pycdr2 import IdlStruct
 from pycdr2.types import int8, int32, uint32, float64, float32, uint8, array
 from dataclasses import dataclass
-from joystick_interface.msg import Joystick
+from joystick_interface.msg import Joystick 
 
 log = logging.getLogger(__name__)
-
-
+logging.basicConfig(level=logging.DEBUG)
 
 @dataclass
 class JoystickData(IdlStruct, typename="JoystickData"):
@@ -23,14 +22,19 @@ class JoystickData(IdlStruct, typename="JoystickData"):
 
 class ZenohBackend():
     def __init__(self) -> None:
-        cfg = zenoh.Config.from_file(self.__get_config_path())
-        try:
-            self.__session = zenoh.open(cfg)
-        except:
-            pass
+        self.cfg = zenoh.Config.from_file(self.__get_config_path())
+        self.__session = None
 
-        self.joy_pub =  self.__session.declare_publisher("joystick")
-
+    def open(self):
+        while True:
+            try:
+                log.info("try open zenoh session")
+                self.__session = zenoh.open(self.cfg)
+                log.info("Zenoh session created")
+                break
+            except Exception:
+                log.error("zenoh session open failed try again", exc_info=True)
+                time.sleep(2)
 
     def __get_config_path(self) -> str:
         path = "/workspaces/rome_ws/src/rome_application/submodules/simple_joy/src/joystick_client/joystick_client/z_config.json5"
@@ -65,7 +69,7 @@ class JoystickManager():
     def run(self):
         while True:
             try:
-                js = Joystick(0)
+                js = JoySimple(0)
                 while True:
                     event = js.poll()
                     if isinstance(event, AxisEvent):
@@ -81,9 +85,12 @@ class JoystickManager():
                 time.sleep(1/2)
 
 if __name__ == "__main__":
+    print("simple joy :)")
     z = ZenohBackend()
+    z.open()
     joy_manager = JoystickManager(cb=z.pub)
     joy_manager.run()
+    
     # p = z.create_publisher("joystick")
     # buf = Joystick([0]*8, [0]*8)
     # counter = 1
