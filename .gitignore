@@ -11,3 +11,5 @@ mav.tlog*
 archives
 patches
 callgrind*
+debian/
+_packages
