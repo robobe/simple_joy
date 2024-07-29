@@ -22,6 +22,7 @@ DEPENDENCIES
 ament_export_dependencies(rosidl_default_runtime)
 
 
-# set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-include(Packing)
+if(DEFINED OUTPUT_FOLDER)
+  include(Packing)
+endif()
 ament_package()
